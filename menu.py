@@ -69,7 +69,7 @@ class MyFrame2 ( wx.Frame ):
 		self.Centre( wx.BOTH )
 		
 		# Connect
-		self.m_bpButton1.Bind( wx.EVT_BUTTON, self.abrir_busqueda )
+		self.m_bpButton1.Bind( wx.EVT_BUTTON, self.abrir_registro )
 		self.m_button2.Bind( wx.EVT_BUTTON, self.abrir_busqueda )
 		
 		self.postgres = conn.Database()
@@ -82,6 +82,130 @@ class MyFrame2 ( wx.Frame ):
 		busqueda.Show()
 		
 		self.m_button2.Disable()
+		
+	def abrir_registro( self, event):
+		registre= registro(self)
+		registre.Show()
+		
+		self.mbp_Button1.Disable()
+		
+		
+class registro ( wx.Frame ):
+	
+	def __init__( self, parent ):
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Registro", pos = wx.DefaultPosition, size = wx.Size( 475,450 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
+		
+		fgSizer2 = wx.FlexGridSizer( 0, 3, 0, 0 )
+		fgSizer2.SetFlexibleDirection( wx.BOTH )
+		fgSizer2.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		
+		self.m_staticText8 = wx.StaticText( self, wx.ID_ANY, u"Nombre:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText8.Wrap( -1 )
+		fgSizer2.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_BOTTOM, 5 )
+		
+		self.txt_nombre = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer2.Add( self.txt_nombre, 0, wx.ALL|wx.ALIGN_BOTTOM, 5 )
+		
+		#####
+		
+		self.ruta="sii.jpg"
+		img = wx.Image(self.ruta, wx.BITMAP_TYPE_ANY)
+		
+		
+		##bitmap
+		
+		
+		
+		self.m_bitmap1 = wx.StaticBitmap( self, wx.ID_ANY, wx.BitmapFromImage(img), wx.DefaultPosition, wx.Size( 140,140 ), 0 )
+		fgSizer2.Add( self.m_bitmap1, 0, wx.ALL, 5 )
+		
+		self.user = wx.StaticText( self, wx.ID_ANY, u"Apellido:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.user.Wrap( -1 )
+		fgSizer2.Add( self.user, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		
+		self.txt_apellido = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer2.Add( self.txt_apellido, 0, wx.ALL, 5 )
+		
+		self.btn_foto = wx.Button( self, wx.ID_ANY, u"Foto", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer2.Add( self.btn_foto, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		
+		self.m_staticText10 = wx.StaticText( self, wx.ID_ANY, u"Dirección", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText10.Wrap( -1 )
+		fgSizer2.Add( self.m_staticText10, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		
+		self.txt_dir = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer2.Add( self.txt_dir, 0, wx.ALL, 5 )
+		
+		
+		fgSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		
+		self.m_staticText11 = wx.StaticText( self, wx.ID_ANY, u"Teléfono:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText11.Wrap( -1 )
+		fgSizer2.Add( self.m_staticText11, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		
+		self.txt_tel = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer2.Add( self.txt_tel, 0, wx.ALL, 5 )
+		
+		
+		fgSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		
+		self.m_staticText12 = wx.StaticText( self, wx.ID_ANY, u"DUI:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText12.Wrap( -1 )
+		fgSizer2.Add( self.m_staticText12, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		
+		self.txt_dui = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer2.Add( self.txt_dui, 0, wx.ALL, 5 )
+		
+		
+		fgSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		
+		self.m_staticText6 = wx.StaticText( self, wx.ID_ANY, u"NIT:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText6.Wrap( -1 )
+		fgSizer2.Add( self.m_staticText6, 0, wx.ALL, 5 )
+		
+		self.txt_nit = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer2.Add( self.txt_nit, 0, wx.ALL, 5 )
+		
+		
+		fgSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		fgSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		
+		self.btn_guardar = wx.Button( self, wx.ID_ANY, u"Guardar", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer2.Add( self.btn_guardar, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		
+		self.btn_cancelar = wx.Button( self, wx.ID_ANY, u"Cancelar", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer2.Add( self.btn_cancelar, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		
+		
+		self.SetSizer( fgSizer2 )
+		self.Layout()
+		
+		self.Centre( wx.BOTH )
+	
+		
+		# Connect Events
+		self.btn_guardar.Bind( wx.EVT_BUTTON, self.guardar )
+		self.btn_cancelar.Bind( wx.EVT_BUTTON, self.cancelar )
+	
+	def __del__( self ):
+		pass
+	def abrir_registro( self, event ):
+		registro = registro(self)
+		registro.Show()
+		
+	
+	# Virtual event handlers, overide them in your derived class
+	def guardar( self, event ):
+		event.Skip()
+	
+	def cancelar( self, event ):
+		event.Skip()
+	
+
+
 
 class MyFrame3 ( wx.Frame ):
 	
