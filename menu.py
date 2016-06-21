@@ -9,7 +9,7 @@
 
 import wx
 import wx.xrc
-import os
+import os,shutil
 import sys
 import wx
 import wx.xrc
@@ -17,19 +17,14 @@ import sqlite3
 import wx.dataview
 import time
 import conectPostgres as conn
-
+import cv, cv2
 ###########################################################################
 ## Class MyFrame2
 ###########################################################################
 
 
 
-class MyFrame2 ( wx.Frame ):
-	
-	
-	
-	
-	
+class Menu ( wx.Frame ):
 	
 	def __init__( self, parent ):
 		
@@ -76,9 +71,8 @@ class MyFrame2 ( wx.Frame ):
 	
 	def __del__( self ):
 		pass
-	
 	def abrir_busqueda( self, event):
-		busqueda = MyFrame3(self)
+		busqueda = Busqueda(self)
 		busqueda.Show()
 		
 		self.m_button2.Disable()
@@ -86,16 +80,19 @@ class MyFrame2 ( wx.Frame ):
 	def abrir_registro( self, event):
 		registre= registro(self)
 		registre.Show()
-		
-		self.mbp_Button1.Disable()
-		
+		self.m_bpButton1.Disable()
 		
 class registro ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Registro", pos = wx.DefaultPosition, size = wx.Size( 475,450 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Registro", pos = wx.DefaultPosition, size = wx.Size( 490,450), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+
+		self.SetSizeHintsSz( wx.Size( 490,450 ), wx.Size( 490,450) )#haciendo que siempre el formulario tenga las misms dimensiones
+		self.Bind( wx.EVT_ACTIVATE, self.actualizarBitmap )#evento para actualizar el bitmap luego de tomar la foto
 		
-		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		self.postgres = conn.Database()
+		
+		
 		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
 		
 		fgSizer2 = wx.FlexGridSizer( 0, 3, 0, 0 )
@@ -111,9 +108,20 @@ class registro ( wx.Frame ):
 		
 		#####
 		
-		self.ruta="sii.jpg"
+		self.ruta="orig_frame.jpg"
+		
+		if os.path.exists(self.ruta):
+			os.remove(self.ruta)
+			self.ruta="user.png"
+			print "Habia foto, pero se a eliminado"
+			
+		else:
+			self.ruta="user.png"
+			print "NO existia imagen de usuario en el sistema"
 		img = wx.Image(self.ruta, wx.BITMAP_TYPE_ANY)
 		
+		self.ancho = 150
+		self.alto = 200
 		
 		##bitmap
 		
@@ -189,25 +197,142 @@ class registro ( wx.Frame ):
 		# Connect Events
 		self.btn_guardar.Bind( wx.EVT_BUTTON, self.guardar )
 		self.btn_cancelar.Bind( wx.EVT_BUTTON, self.cancelar )
+		self.btn_foto.Bind( wx.EVT_BUTTON, self.foto )
+		
+		self.padre = parent
+		
 	
 	def __del__( self ):
-		pass
+		self.padre.m_bpButton1.Enable(True)
+		
+	
 	def abrir_registro( self, event ):
 		registro = registro(self)
 		registro.Show()
+		self.m_bpButton1.Enable(False)	
+	
+	
 		
+	def foto( self, event ):
+		
+		panel = ShowCapture(self)
+		panel.Show()
+	
+	#funcion para actualizar el bitmap luego de tomar la foto, o cada vez que el foco cambie
+	#hacia el formulario de registro, consiste en; tomar la ultima fotografia de un usuario, en este
+	#caso, la foto que se acaba de tomar del usuario, para intercambiarla por la que ya estaba, que era
+	#la silueta de un user png, y refrescamos el bitmap, para que haga el cambio automatico
+	def actualizarBitmap(self, event):
+		print "Focus"
+		self.ruta="orig_frame.jpg"
+		if os.path.exists(self.ruta):
+			
+			self.ruta="orig_frame.jpg"
+			print "Habia foto"
+			
+		else:
+			self.ruta="user.png"
+			print "NO existia imagen de usuario en el sistema"
+		img = wx.Image(self.ruta, wx.BITMAP_TYPE_ANY)
+		W = img.GetWidth()
+		H = img.GetHeight()
+		
+		if W > H:
+			NewW = self.ancho
+			NewH = self.ancho * H / W
+		else:
+			NewH = self.ancho
+			NewW = self.ancho * W / H
+		img = img.Scale(NewW,NewH)
+		self.m_bitmap1.SetBitmap(wx.BitmapFromImage(img))
+		self.Refresh()
+	
+	
 	
 	# Virtual event handlers, overide them in your derived class
 	def guardar( self, event ):
-		event.Skip()
+		self.nombre = str(self.txt_nombre.GetValue())
+		self.apellido = str(self.txt_apellido.GetValue()) 
+		self.direc = str(self.txt_dir.GetValue()) 
+		self.telefono = str(self.txt_tel.GetValue()) 
+		self.dui = str(self.txt_dui.GetValue()) 
+		self.nit = str(self.txt_nit.GetValue())
+		self.jpg = self.nombreImg2()
+		sql="INSERT INTO usuarios(nombre,apellido,direccion,telefono,dui,nit,imagen) VALUES ('"+self.nombre+"', '"+self.apellido+"','"+self.direc+"', '"+self.telefono+"', '"+self.dui+"', '"+self.nit+"', '"+self.jpg+"')"
+		data_param=("")
+		typesql='I'
+		self.dial = wx.MessageDialog(None, 'DATOS GUARDADOS EXITO CON', 'Info', wx.OK|wx.CENTRE)
+		if self.postgres.query(sql,data_param,typesql):
+			if self.guardarImg():
+				if self.dial.ShowModal() == wx.ID_OK:
+					self.Close()
+			else:
+				self.dial = wx.MessageDialog(None, 'IMAGEN NO GUARDADA', 'ERROR', wx.OK|wx.CENTRE)
+		else:
+			self.dial = wx.MessageDialog(None, 'DATOS NO GUARDADOS ERROR VERIFIQUE BIEN SUS DATOS', 'ERROR', wx.OK|wx.CENTRE)
+			
+	def nombreImg(self):
+		sql="""select max(id) from usuarios """
+		data_param=''
+		typesql='S'
+		self.datos = self.postgres.query(sql,data_param,typesql)	
+		for dato in self.datos:
+				id=dato[0]
+				id=(str(id))
+		name_img = "user"+id+".jpg"
+		return name_img
+		
+	def nombreImg2(self):
+		sql="""select max(id) from usuarios """
+		data_param=''
+		typesql='S'
+		self.datos = self.postgres.query(sql,data_param,typesql)	
+		for dato in self.datos:
+				id=dato[0]+1
+				id=(str(id))
+		name_img = "user"+id+".jpg"
+		return name_img
+		
+	def guardarImg(self):
+		self.user_png = self.nombreImg()
+		ruta = str(os.getcwd())+"/imagenes"
+		print ruta
+		if os.path.exists(ruta):
+			self.moverImg()
+			return True
+		else:
+			os.mkdir("imagenes", 0o777)
+			self.moverImg()
+			return True
+			
+	
+	def moverImg(self):
+		if os.path.exists("orig_frame.jpg"):
+			os.rename("orig_frame.jpg", self.user_png)
+			if os.path.exists("imagenes/"+self.user_png):
+				print "Habia imagen con el mismo usuario pero se a borrado"
+				os.remove("imagenes/"+self.user_png)
+				shutil.move(self.user_png ,"imagenes")
+			else:
+				shutil.move(self.user_png ,"imagenes")
+			print "Movido y renombrado con exito"
+		else:
+			print "No existe foto de usuario para guardar"
+	
+	
 	
 	def cancelar( self, event ):
 		event.Skip()
+		
+
+
+
+##############
 	
 
 
-
-class MyFrame3 ( wx.Frame ):
+##################
+class Busqueda ( wx.Frame ):
 	
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Buscar Usuario", pos = wx.DefaultPosition, size = wx.Size( 745,700 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
@@ -343,8 +468,6 @@ class MyFrame3 ( wx.Frame ):
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
-		self.m_button13 = wx.Button( self, wx.ID_ANY, u"Menu", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer5.Add( self.m_button13, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		
 		fgSizer3.Add( fgSizer5, 1, wx.EXPAND, 5 )
@@ -354,25 +477,162 @@ class MyFrame3 ( wx.Frame ):
 		self.Layout()
 		
 		self.Centre( wx.BOTH )
-		self.m_button13.Bind( wx.EVT_BUTTON, self.abrir_menu )
+		
+		self.padre = parent
 	
 	def __del__( self ):
+		self.padre.m_button2.Enable(True)
+		
+	def abrir_busqueda( self, event):
+		busqueda = Busqueda(self)
+		busqueda.Show()
+		
+		
+		
+		
+		
+class ShowCapture ( wx.Frame ):
+	
+	def __init__(self, parent,  fps=7):
+		###
+		
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 400,640 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		capture = cv2.VideoCapture(0)
+		capture.set(cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
+		capture.set(cv.CV_CAP_PROP_FRAME_HEIGHT, 1000)
+
+		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+		
+		
+		bSizer3 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.m_panel1 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, (500,500), wx.TAB_TRAVERSAL )
+		self.m_panel1.SetMinSize( wx.Size( 400,640 ) )
+		self.m_panel1.SetMaxSize( wx.Size( 400,640 ) )
+		self.m_panel1.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+		self.m_panel1.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+		
+		bSizer4 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.m_button3 = wx.Button( self.m_panel1, wx.ID_ANY, u"CAPTURA",  wx.Point( -500,-1 ), wx.DefaultSize, 0 )
+		bSizer4.Add( self.m_button3, 0, wx.ALL, 5 )
+		
+		####
+		
+		self.capture = capture
+
+		ret, frame = self.capture.read()
+
+
+		height, width = frame.shape[:2]
+
+
+		parent.SetSize((width, height))
+
+
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		
+
+		self.bmp = wx.BitmapFromBuffer(width, height, frame)
+
+		
+		self.timer = wx.Timer(self)
+
+		self.timer.Start(1000./fps)
+
+
+		self.Bind(wx.EVT_PAINT, self.OnPaint)
+
+		self.Bind(wx.EVT_TIMER, self.NextFrame)
+		
+		
+		
+		#####
+		
+		
+		self.m_bpButton3 = wx.BitmapButton( self.m_panel1, wx.ID_ANY, self.bmp, wx.DefaultPosition, (400,640), wx.BU_AUTODRAW|wx.NO_BORDER )
+		bSizer4.Add( self.m_bpButton3, 0, wx.ALL, 5 )
+		self.m_bpButton3.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+		self.m_bpButton3.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+		
+		
+		
+		self.m_panel1.SetSizer( bSizer4 )
+		self.m_panel1.Layout()
+		bSizer4.Fit( self.m_panel1 )
+		bSizer3.Add( self.m_panel1, 1, wx.EXPAND |wx.ALL, 5 )
+		
+		
+		self.SetSizer( bSizer3 )
+		self.Layout()
+		
+		self.Centre( wx.BOTH )
+		
+		###
+		
+		
+		
+		
+		
+		
+		# Connect Events
+		self.m_button3.Bind( wx.EVT_BUTTON, self.guardar )
+		self.m_bpButton3.Bind( wx.EVT_BUTTON, self.guardar )
+		
+		self.postgres = conn.Database()
+
+	
+	# Virtual event handlers, overide them in your derived class
+	def guardar( self, event ):
+		self.timer.Stop()
+		
+		try:
+			cv2.imwrite('orig_frame.jpg', self.imagen_guardar)
+			time.sleep(1)
+			print "Guardado"
+			self.Close() 
+		except AttributeError:
+			traceback.print_exc()
+		event.Skip()
+		
+	def OnPaint(self, evt):
+
+		dc = wx.BufferedPaintDC(self)
+
+		dc.DrawBitmap(self.bmp, 0, 0)
+		print "Imprimiendo"
+
+
+
+	def NextFrame(self, event):
+
+		ret, self.imagen_guardar = self.capture.read()
+
+		if ret:
+
+			frame = cv2.cvtColor(self.imagen_guardar, cv2.COLOR_BGR2RGB)
+			height, width = frame.shape[:2]
+			print height,width
+			self.bmp.CopyFromBuffer(frame)
+			
+			self.Refresh()
+			print "refresh"
+
+
+
+	def __del__(self):
 		pass
-	def abrir_menu( self, event ):
-		menu = MyFrame2(self)
-		menu.Show()
-		
-		#self.m_button2.Disable(True)
-		#self.padre = parent
-		
-		
+
 		
 
 
 	
 class MyApp(wx.App):
     def OnInit(self):
-        frame = MyFrame2(None)
+        frame = Menu(None)
         self.SetTopWindow(frame)
         frame.Show()
         return 1
