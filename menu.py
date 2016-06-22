@@ -253,23 +253,6 @@ class registro ( wx.Frame ):
 	def guardar( self, event ):
 		self.nombre = str(self.txt_nombre.GetValue())
 		self.apellido = str(self.txt_apellido.GetValue()) 
-<<<<<<< HEAD
-       # self.direc = str(self.txt_dir.GetValue()) 
-        self.telefono = str(self.txt_tel.GetValue()) 
-        self.dui = str(self.txt_dui.GetValue()) 
-        self.nit = str(self.txt_nit.GetValue()) 
-        sql="INSERT INTO usuarios(nombre,apellido,direccion,telefono,dui,nit) VALUES ('"+self.nombre+"', '"+self.apellido+"','"+self.direccion+"', '"+self.telefono+"', '"+self.dui+"', '"+self.nit+"')"
-        data_param=("")
-        typesql='I'
-        self.dial = wx.MessageDialog(None, 'DATOS GUARDADOS', 'Info', wx.OK|wx.CENTRE)
-        if postgres.query(sql,data_param,typesql):
-			 self.dial.ShowModal()
-	
-    #def cancelar( self, event ):
-	#	event.Skip()
-	
-class MyFrame3 ( wx.Frame ):
-=======
 		self.direc = str(self.txt_dir.GetValue()) 
 		self.telefono = str(self.txt_tel.GetValue()) 
 		self.dui = str(self.txt_dui.GetValue()) 
@@ -340,17 +323,8 @@ class MyFrame3 ( wx.Frame ):
 	
 	def cancelar( self, event ):
 		event.Skip()
-		
-
-
-
-##############
-	
-
-
-##################
 class Busqueda ( wx.Frame ):
->>>>>>> 865d20853686760d4fe0dd9fe7a9c1b1a62d9338
+
 	
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Buscar Usuario", pos = wx.DefaultPosition, size = wx.Size( 745,700 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
