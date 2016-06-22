@@ -324,30 +324,7 @@ class registro ( wx.Frame ):
 	def cancelar( self, event ):
 		event.Skip()
 		
-# -*- coding: utf-8 -*- 
 
-###########################################################################
-## Python code generated with wxFormBuilder (version Jun  9 2016)
-## http://www.wxformbuilder.org/
-##
-## PLEASE DO "NOT" EDIT THIS FILE!
-###########################################################################
-
-import wx
-import wx.xrc
-import os,shutil
-import sys
-import wx
-import wx.xrc
-import sqlite3
-import wx.dataview
-import time
-import conectPostgres as conn
-import cv, cv2
-
-###########################################################################
-## Class MyFrame3
-###########################################################################
 
 class Busqueda ( wx.Frame ):
 	
@@ -356,6 +333,10 @@ class Busqueda ( wx.Frame ):
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT ) )
+		
+		self.Bind( wx.EVT_ACTIVATE, self.actualizarBitmap )#evento para actualizar el bitmap luego de tomar la foto
+		
+		
 		
 		fgSizer3 = wx.FlexGridSizer( 0, 3, 0, 0 )
 		fgSizer3.SetFlexibleDirection( wx.BOTH )
@@ -367,6 +348,9 @@ class Busqueda ( wx.Frame ):
 		
 		self.m_textbuscar = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 319,-1 ), 0 )
 		fgSizer3.Add( self.m_textbuscar, 0, wx.ALL, 5 )
+		
+		
+		
 		
 		
 		fgSizer3.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -384,8 +368,25 @@ class Busqueda ( wx.Frame ):
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
-		self.ruta="sii.jpg"
+		
+		#####
+		
+		self.ruta="orig_frame.jpg"
+		
+		if os.path.exists(self.ruta):
+			os.remove(self.ruta)
+			self.ruta="user.png"
+			print "Habia foto, pero se a eliminado"
+			
+		else:
+			self.ruta="user.png"
+			print "NO existia imagen de usuario en el sistema"
 		img = wx.Image(self.ruta, wx.BITMAP_TYPE_ANY)
+		
+		self.ancho = 150
+		self.alto = 200
+		
+		##
 		
 		self.m_bitmap5 = wx.StaticBitmap( self, wx.ID_ANY, wx.BitmapFromImage(img), wx.DefaultPosition, wx.Size( 140,140 ), 0 )
 		fgSizer5.Add( self.m_bitmap5, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
@@ -394,16 +395,16 @@ class Busqueda ( wx.Frame ):
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
-		self.m_button12 = wx.Button( self, wx.ID_ANY, u"Cambiar foto", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer5.Add( self.m_button12, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		self.m_cambiarfoto = wx.Button( self, wx.ID_ANY, u"Cambiar foto", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer5.Add( self.m_cambiarfoto, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
 		self.m_staticText17 = wx.StaticText( self, wx.ID_ANY, u"ID", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText17.Wrap( -1 )
 		fgSizer5.Add( self.m_staticText17, 0, wx.ALL, 5 )
 		
-		self.m_textCtrl19 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
-		fgSizer5.Add( self.m_textCtrl19, 0, wx.ALL, 5 )
+		self.m_textid = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 200,-1 ), 0 )
+		fgSizer5.Add( self.m_textid, 0, wx.ALL, 5 )
 		
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -471,8 +472,8 @@ class Busqueda ( wx.Frame ):
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
-		self.m_button10 = wx.Button( self, wx.ID_ANY, u"Modificar", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer5.Add( self.m_button10, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		self.m_modificar = wx.Button( self, wx.ID_ANY, u"Modificar", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer5.Add( self.m_modificar, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		
 		
@@ -481,8 +482,8 @@ class Busqueda ( wx.Frame ):
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
-		self.m_button12 = wx.Button( self, wx.ID_ANY, u"Eliminar", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer5.Add( self.m_button12, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		self.m_eliminar = wx.Button( self, wx.ID_ANY, u"Eliminar", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer5.Add( self.m_eliminar, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		
 		fgSizer5.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -503,10 +504,14 @@ class Busqueda ( wx.Frame ):
 		
 		# Connect
 		
-		
+		self.listctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.seleccionar)
 		self.m_textbuscar.Bind( wx.EVT_TEXT, self.busqueda )
+		self.m_cambiarfoto.Bind( wx.EVT_BUTTON, self.foto )
+		self.m_modificar.Bind( wx.EVT_BUTTON, self.modificar )
+		self.m_eliminar.Bind( wx.EVT_BUTTON, self.eliminar )
 		
 		self.padre = parent
+		self.ancho = 150
 		self.postgres = conn.Database()
 		#Evento cargar datos de encabezado a la lista y se definen las columnas que lleva el control
 		self.listctrl.InsertColumn(0, 'Id', width=50)
@@ -519,13 +524,6 @@ class Busqueda ( wx.Frame ):
 		self.cargar_datos()
 	def __del__( self ):
 		self.padre.m_button2.Enable(True)
-	def actualizar_datos( self, event ):
-		nombre = str(self.m_textnombre.GetValue())
-		apellido = str(self.m_textapellido.GetValue())
-		direccion = str(self.m_textdireccion.GetValue())
-		telefono = str(self.m_texttelefono.GetValue())
-		dui = str(self.m_textdui.GetValue())
-		nit = str(self.m_textnit.GetValue())
 	
 					
 	def abrir_busqueda( self, event):
@@ -534,6 +532,194 @@ class Busqueda ( wx.Frame ):
 		
 	def busqueda(self, event):
 		 self.cargar_datos()
+		 
+	def foto( self, event ):
+		
+		panel = ShowCapture(self)
+		panel.Show()
+		
+	def modificar(self, event):
+		id = str(self.m_textid.GetValue())
+		self.nombre = str(self.m_textnombre.GetValue())
+		self.apellido = str(self.m_textapellido.GetValue())
+		self.direccion = str(self.m_textdireccion.GetValue())
+		self.telefono = str(self.m_texttelefono.GetValue())
+		self.dui = str(self.m_textdui.GetValue())
+		self.nit = str(self.m_textnit.GetValue())
+		jpg = "user"+id+".jpg"
+		sql="update usuarios set nombre='"+self.nombre+"', apellido='"+self.apellido+"',direccion='"+self.direccion+"', telefono='"+self.telefono+"', dui='"+self.dui+"', nit='"+self.nit+"' where id='"+id+"'"
+		data_param=("")
+		typesql='U'
+		self.dial = wx.MessageDialog(None, 'DATOS GUARDADOS EXITO CON', 'INFO', wx.OK|wx.CENTRE)
+		if self.postgres.query(sql,data_param,typesql):
+			if os.path.exists("orig_frame.jpg"):
+				if moverImg(jpg):
+					self.dial.ShowModal()
+					self.cargar_datos()
+				else:
+					self.dial = wx.MessageDialog(None, 'IMAGEN NO MOVIDA', 'INFO', wx.OK|wx.CENTRE)
+					self.dial.ShowModal()
+			else:
+				self.dial.ShowModal()
+				self.cargar_datos()
+			
+
+		else:
+			self.dial = wx.MessageDialog(None, 'DATOS NO GUARDADOS ERROR VERIFIQUE BIEN SUS DATOS', 'ERROR', wx.OK|wx.CENTRE)
+			print "No guardados"
+			self.dial.ShowModal()
+			self.cargar_datos()
+
+			
+		
+	
+	def moverImg(self,img):
+		self.user_png = img
+		if os.path.exists("orig_frame.jpg"):
+			os.rename("orig_frame.jpg", self.user_png)
+			if os.path.exists("imagenes/"+self.user_png):
+				print "Habia imagen con el mismo usuario pero se a borrado"
+				os.remove("imagenes/"+self.user_png)
+				shutil.move(self.user_png ,"imagenes")
+			else:
+				shutil.move(self.user_png ,"imagenes")
+			print "Movido y renombrado con exito"
+		else:
+			print "No existe foto de usuario para guardar"
+		
+		
+	
+	def eliminar(self, event):
+		 pass
+	def seleccionar(self, event):
+		self.item ='' 
+		self.item2 ='' 
+		self.item = self.listctrl.GetFocusedItem() #traer la posicion del indice
+		self.item2 = self.listctrl.GetItemText(self.item)#traer el texto del primera columna segun la posicion del indice
+		data_param = ""
+		if self.item2!="":
+			numreg=0
+			typesql='S'
+			identificador=str(self.item2)
+			sql="SELECT count(*) FROM usuarios  where id='"+identificador+"'"
+			self.filas=self.postgres.query(sql,data_param,typesql)	
+			for fila in self.filas:
+				registros=fila[0]
+			if registros>0:       
+				sql="select * from usuarios where id='"+identificador+"'"
+				self.rows=self.postgres.query(sql,data_param,typesql)	
+		
+				for row in self.rows:					           
+					self.m_textid.SetValue(str(row[0]))
+					self.m_textnombre.SetValue(str(row[1]))
+					self.m_textapellido.SetValue(str(row[2]))
+					self.m_textdireccion.SetValue(str(row[3]))
+					self.m_texttelefono.SetValue(str(row[4]))
+					self.m_textdui.SetValue(str(row[5]))
+					self.m_textnit.SetValue(str(row[6]))	
+					self.imagen = str(row[7])
+					
+				self.ruta = "imagenes/"+self.imagen
+				if os.path.exists(self.ruta):
+					self.ruta=self.ruta
+					
+				else:
+					self.ruta="user.png"
+					self.dial = wx.MessageDialog(None, 'NO EXISTE  LA IMAGEN DE ESTE USUARIO', 'ERROR', wx.OK|wx.CENTRE)
+					self.dial.Show()
+				img = wx.Image(self.ruta, wx.BITMAP_TYPE_ANY)
+				W = img.GetWidth()
+				H = img.GetHeight()
+					
+				if W > H:
+					NewW = self.ancho
+					NewH = self.ancho * H / W
+				else:
+					NewH = self.ancho
+					NewW = self.ancho * W / H
+				img = img.Scale(NewW,NewH)
+				self.m_bitmap5.SetBitmap(wx.BitmapFromImage(img))
+				self.Refresh()
+										
+			else:
+				print "no hay registros"
+	
+	
+	def foto( self, event ):
+		
+		panel = ShowCapture(self)
+		panel.Show()
+	
+	#funcion para actualizar el bitmap luego de tomar la foto, o cada vez que el foco cambie
+	#hacia el formulario de registro, consiste en; tomar la ultima fotografia de un usuario, en este
+	#caso, la foto que se acaba de tomar del usuario, para intercambiarla por la que ya estaba, que era
+	#la silueta de un user png, y refrescamos el bitmap, para que haga el cambio automatico
+	def actualizarBitmap(self, event):
+		print "Focus"
+		self.ruta="orig_frame.jpg"
+		if os.path.exists(self.ruta):
+			
+			self.ruta="orig_frame.jpg"
+			print "Habia foto"
+			
+		else:
+			self.ruta="user.png"
+			print "NO existia imagen de usuario en el sistema"
+		img = wx.Image(self.ruta, wx.BITMAP_TYPE_ANY)
+		W = img.GetWidth()
+		H = img.GetHeight()
+		
+		if W > H:
+			NewW = self.ancho
+			NewH = self.ancho * H / W
+		else:
+			NewH = self.ancho
+			NewW = self.ancho * W / H
+		img = img.Scale(NewW,NewH)
+		self.m_bitmap5.SetBitmap(wx.BitmapFromImage(img))
+		self.Refresh()
+	
+	def busqueda_fila(self, id):
+		cadena_buscar=self.txt_Id.GetValue()	
+		if cadena_buscar!="":
+			numreg=0
+			typesql='S'
+			data1=str(cadena_buscar)
+			data_param= {'id1':data1} 
+			sql="""SELECT count(*) FROM empleado  where id=:id1"""
+			self.filas=self.db.query(sql,data_param,typesql)	
+			for fila in self.filas:
+				numreg=fila[0]
+			if numreg>0:       
+				sql="""select * from empleado where id=:id1"""
+				self.rows=self.db.query(sql,data_param,typesql)	
+		
+				for row in self.rows:					           
+					self.txt_Dui.SetValue(str(row[1]))
+					self.txt_Nombre.SetValue(str(row[2]))
+					self.txt_Edad.SetValue(str(row[3]))
+					self.txt_Direccion.SetValue(str(row[4]))
+					self.txt_Nit.SetValue(str(row[5]))
+					self.txt_Salario.SetValue(str(row[6]))
+
+					if row[8] is None: #row[8] es la posicion del cursor del campo imagen
+						self.ruta='imgs/blank_img.png'
+					else:			
+						fout = open('newimg.jpg','wb') # Crear archivo para escribir imagen
+						fout.write(str(row[8]))  #Escribir imagen desde Bd a otro Archivo en disco
+						fout.close()
+						self.ruta='newimg.jpg' 	
+			else:
+				self.txt_Dui.SetValue("")
+				self.txt_Nombre.SetValue("")
+				self.txt_Edad.SetValue("")
+				self.txt_Direccion.SetValue("")
+				self.txt_Nit.SetValue("")
+				self.txt_Salario.SetValue("")
+				
+				self.ruta='imgs/blank_img.png'		
+			self.VerImagen(self.ruta) #Llamar al metodo para ver la imagen
+
 		 
 	def cargar_datos(self):
 		#evento para cargar datos de la bd a la lista de 2 maneras todos si el ctrl texto esta vacio 
@@ -568,8 +754,6 @@ class Busqueda ( wx.Frame ):
 			else:
 				self.listctrl.SetItemBackgroundColour(self.row_count, "yellow")
 			self.row_count += 1	   
-
-
 
 		
 		

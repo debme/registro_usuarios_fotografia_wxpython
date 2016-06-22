@@ -39,7 +39,8 @@ class Database:
 		elif self.typequery=='U':
 			#U: update operation SQL
 			cursor.execute(q,data_param)
-			self.connection.commit()			
+			self.connection.commit()	
+			return True		
 		elif self.typequery=='I':
 			#I: insert operation SQL
 			cursor.execute(q,data_param)
@@ -49,15 +50,9 @@ class Database:
 			#D: Delete operation SQL
 			cursor.execute(q,data_param)
 			self.connection.commit()
-		elif self.typequery=='II':
-			#I: insert image operation SQL
-			idd=data_param[0]
-			img=data_param[1]
-			binario = sqlite3.Binary(img)
-			data_paramx=(idd,binario)
-			print data_paramx
-			cursor.execute(q,data_paramx)
-			self.connection.commit()			
+			return True
+		
+		
 						
     def __del__(self):
         self.connection.close()
