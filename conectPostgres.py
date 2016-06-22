@@ -28,11 +28,12 @@ class Database:
 			    cursor.execute(q,data_param)
 			rows=cursor.fetchall()
 			return rows
-		elif self.typequery=='SL':	
+		elif self.typequery=='SL':
+				
 			#SL: SQL Select for like 
 			dato = (data_param,)
-			#print q,dato
-			cursor.execute(q,dato)
+			print q
+			cursor.execute(q)
 			rows=cursor.fetchall()
 			return rows
 		elif self.typequery=='U':
